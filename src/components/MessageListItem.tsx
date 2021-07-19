@@ -1,30 +1,23 @@
-import {
-  IonItem,
-  IonLabel,
-  IonNote
-  } from '@ionic/react';
-import { Message } from '../data/messages';
-import './MessageListItem.css';
+import { IonItem, IonLabel, IonNote } from "@ionic/react";
+import "./MessageListItem.css";
 
-interface MessageListItemProps {
-  message: Message;
+const getDate = (ts: string) => {
+  return ts.split('T')[0];
 }
 
-const MessageListItem: React.FC<MessageListItemProps> = ({ message }) => {
+const MessageListItem: React.FC<any> = ({ message }) => {
   return (
-    <IonItem routerLink={`/message/${message.id}`} detail={false}>
+    <IonItem routerLink={`/message/${message._id}`} detail={false}>
       <div slot="start" className="dot dot-unread"></div>
       <IonLabel className="ion-text-wrap">
         <h2>
-          {message.fromName}
+          {message.name}
           <span className="date">
-            <IonNote>{message.date}</IonNote>
+            <IonNote>{getDate(message.createdAt)}</IonNote>
           </span>
         </h2>
-        <h3>{message.subject}</h3>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
+        <h3>{message.description}</h3>
+        <p>By: {message.username} </p>
       </IonLabel>
     </IonItem>
   );

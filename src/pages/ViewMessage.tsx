@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Message, getMessage } from '../data/messages';
+import { useState } from "react";
 import {
   IonBackButton,
+  IonButton,
   IonButtons,
   IonContent,
   IonHeader,
@@ -12,63 +12,111 @@ import {
   IonPage,
   IonToolbar,
   useIonViewWillEnter,
-} from '@ionic/react';
-import { personCircle } from 'ionicons/icons';
-import { useParams } from 'react-router';
-import './ViewMessage.css';
+} from "@ionic/react";
+import { personCircle } from "ionicons/icons";
+import { useParams } from "react-router";
+import "./ViewMessage.css";
+import { ApiUrls } from "../data/apiUrls";
+
+const getDate = (ts: string) => {
+  return ts.split("T")[0];
+};
 
 function ViewMessage() {
-  const [message, setMessage] = useState<Message>();
+  const [message, setMessage] = useState<any>();
   const params = useParams<{ id: string }>();
+  const [issue, setIssue] = useState<any>(null);
 
   useIonViewWillEnter(() => {
-    const msg = getMessage(parseInt(params.id, 10));
-    setMessage(msg);
+    fetch(ApiUrls.issueApi + "/" + params.id, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) {
+          setIssue(res.data);
+        } else {
+          alert("Something went wrong !!");
+        }
+      });
   });
+
+  const username = sessionStorage.getItem("username");
+
+  const updateIssue = (status: any) => {
+    fetch(ApiUrls.issueApi + "/" + params.id, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+      body: JSON.stringify({
+        status,
+      }),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) {
+          setIssue(res.data);
+        } else {
+          alert("Something went wrong !!");
+        }
+      });
+  };
 
   return (
     <IonPage id="view-message-page">
       <IonHeader translucent>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton text="Inbox" defaultHref="/home"></IonBackButton>
+            <IonBackButton
+              text="All Issues"
+              defaultHref="/home"
+            ></IonBackButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
-        {message ? (
+        {issue ? (
           <>
             <IonItem>
               <IonIcon icon={personCircle} color="primary"></IonIcon>
               <IonLabel className="ion-text-wrap">
                 <h2>
-                  {message.fromName}
+                  Issue Name: {issue.name}
                   <span className="date">
-                    <IonNote>{message.date}</IonNote>
+                    <IonNote>{getDate(issue.createdAt)}</IonNote>
                   </span>
                 </h2>
                 <h3>
-                  To: <IonNote>Me</IonNote>
+                  Created by: <IonNote>{issue.username}</IonNote>
                 </h3>
               </IonLabel>
             </IonItem>
 
             <div className="ion-padding">
-              <h1>{message.subject}</h1>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-                nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-                sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </p>
+              <p>Location Description : {issue.locationDesc}</p>
+              <p>Issue Description: {issue.description}</p>
+              <p>Status: {issue.status}</p>
+              <p>lat: {issue.lat}</p>
+              <p>long: {issue.long}</p>
+              {username === issue.username && issue.status === "addressed" && (
+                <IonButton onClick={() => updateIssue("fixed")}>
+                  Fix Confirmed
+                </IonButton>
+              )}
+              {username !== issue.username && issue.status === "new" && (
+                <IonButton onClick={() => updateIssue("addressed")}>
+                  Flag as Fixed
+                </IonButton>
+              )}
             </div>
           </>
         ) : (
-          <div>Message not found</div>
+          <div>Issue not found</div>
         )}
       </IonContent>
     </IonPage>
